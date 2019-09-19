@@ -76,14 +76,20 @@ class Linear(Layer):
         """linear forward"""
         output = np.dot(input,self.W)+self.b
         tensor = {
-            "input" : output,
+            "input" : input,
             "output" : output
         }
-        self._saved_for_backward(tensor)      
+        self._saved_for_backward(tensor) 
+        #print(output.shape)     
+        return output
 
     def backward(self, grad_output):
         '''Linear backward'''
-        self.grad_W = np.dot(self._saved_tensor[input].T,grad_output)
+        self.grad_W = np.dot(self._saved_tensor["input"].T,grad_output)
+        #print(self.grad_W.shape)
+        #print(grad_output.shape)
+        #print(self.W.shape)
+        #print(self._saved_tensor["input"].T.shape)
         self.grad_b = np.sum(grad_output,axis = 0)
         output = np.dot(grad_output,self.W.T)
         return output
