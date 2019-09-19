@@ -28,12 +28,16 @@ class Relu(Layer):
         super(Relu, self).__init__(name)
 
     def forward(self, input):
-        '''Your codes here'''
-        pass
+        '''Relu Activation'''
+        tensor = {
+            "input" : input
+        }
+        self._saved_for_backward(tensor)
+        return (np.abs(input)+input)/2
 
     def backward(self, grad_output):
-        '''Your codes here'''
-        pass
+        '''Relu Backward'''
+        return grad_output*(self._saved_tensor["input"]>0)
 
 
 class Sigmoid(Layer):
@@ -41,12 +45,17 @@ class Sigmoid(Layer):
         super(Sigmoid, self).__init__(name)
 
     def forward(self, input):
-        '''Your codes here'''
-        pass
+        '''Sigmoid Activation'''
+        output = 1/(1+np.exp(-input))
+        tensor = {
+            "output" : output
+        }
+        self._saved_for_backward(tensor)
+        return output
 
     def backward(self, grad_output):
-        '''Your codes here'''
-        pass
+        '''Sigmoid backward'''
+        return grad_output*(self._saved_tensor["output"]*(1-self._saved_tensor["output"]))
 
 
 class Linear(Layer):
@@ -64,12 +73,20 @@ class Linear(Layer):
         self.diff_b = np.zeros(out_num)
 
     def forward(self, input):
-        '''Your codes here'''
-        pass
+        """linear forward"""
+        output = np.dot(input,self.W)+self.b
+        tensor = {
+            "input" : output,
+            "output" : output
+        }
+        self._saved_for_backward(tensor)      
 
     def backward(self, grad_output):
-        '''Your codes here'''
-        pass
+        '''Linear backward'''
+        self.grad_W = np.dot(self._saved_tensor[input].T,grad_output)
+        self.grad_b = np.sum(grad_output,axis = 0)
+        output = np.dot(grad_output,self.W.T)
+        return output
 
     def update(self, config):
         mm = config['momentum']
