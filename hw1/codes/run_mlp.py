@@ -10,10 +10,13 @@ import matplotlib.pyplot as plt
 
 train_data, test_data, train_label, test_label = load_mnist_2d('data')
 model = []
-for i in range(0,7):
+for i in range(0,4):
     mmodel = Network()
-    mmodel.add(Linear("Linear1", 784, 10, 0.01))
-    mmodel.add(Sigmoid("Relu"))
+    if i == 1:
+        mmodel.add(Linear("Linear1", 784, 256, 0.01))
+        mmodel.add(Relu("Relu0"))
+        mmodel.add(Linear("Linear2", 256, 10, 0.01))
+        mmodel.add(Relu("Relu"))
     model.append(mmodel)
 
 # Your model defintion here
@@ -27,7 +30,7 @@ for i in range(0,7):
 #model.add(Relu('relu2'))
 #model.add(Linear('linear3',64,10,0.01))
 
-loss = SoftmaxCrossEntropyLoss("loss")
+#loss = SoftmaxCrossEntropyLoss("loss")
 #loss = EuclideanLoss("loss")
 #loss = (name='loss')
 
@@ -38,9 +41,9 @@ loss = SoftmaxCrossEntropyLoss("loss")
 #       'disp_freq' denotes number of iterations in one epoch to display information.
 
 config = {
-    'learning_rate': 0.01,
+    'learning_rate': 0.001,
     'weight_decay': 0.0,
-    'momentum': 0.75,
+    'momentum': 0.5,
     'batch_size': 50,
     'max_epoch': 1000,
     'disp_freq': 50,
@@ -52,94 +55,23 @@ train_acc = {}
 test_loss = {}
 test_acc = {}
 
-for i in range(0,7):
-    value = config["weight_decay"]
-    if value < 0.00001:
-        config['weight_decay'] += 0.01
-    elif value < 0.09:
-        config['weight_decay'] *= 10
-    else:
-        if value < 0.2:
-            config['weight_decay'] = 0.3
-        elif value < 0.4:
-            config['weight_decay'] = 0.5
-        elif value < 0.6:
-            config['weight_decay'] = 0.7
-        else:
-            config['weight_decay'] = 0.9
+for i in range(0,4):
+    if i == 1:
+        train_acc.update({1:[]})
+        train_loss.update({1:[]})
+        test_acc.update({1:[]})
+        test_loss.update({1:[]})
+        loss = EuclideanLoss("loss")
+        for epoch in range(config['max_epoch']):
+            LOG_INFO('Training @ %d epoch...' % (epoch))
+            result = train_net(model[i], loss, config, train_data, train_label, config['batch_size'], config['disp_freq'])
+            train_acc[1].append(result["acc"])
+            train_loss[1].append(result["loss"])
 
-    if i == 0:
-        config['weight_decay'] = 0.0
+            if epoch % config['test_epoch'] == 0:
+                LOG_INFO('Testing @ %d epoch...' % (epoch))
+                result = test_net(model[i], loss, test_data, test_label, config['batch_size'])
+                test_loss[1].append(result["loss"])
+                test_acc[1].append(result["acc"])
 
-    train_acc.update({config['weight_decay']:[]})
-    train_loss.update({config['weight_decay']:[]})
-    test_acc.update({config['weight_decay']:[]})
-    test_loss.update({config['weight_decay']:[]})
-    for epoch in range(config['max_epoch']):
-        LOG_INFO('Training @ %d epoch...' % (epoch))
-        result = train_net(model[i], loss, config, train_data, train_label, config['batch_size'], config['disp_freq'])
-        train_acc[config['weight_decay']].append(result["acc"])
-        train_loss[config['weight_decay']].append(result["loss"])
-
-        if epoch % config['test_epoch'] == 0:
-            LOG_INFO('Testing @ %d epoch...' % (epoch))
-            result = test_net(model[i], loss, test_data, test_label, config['batch_size'])
-            test_loss[config['weight_decay']].append(result["loss"])
-            test_acc[config['weight_decay']].append(result["acc"])
-
-
-plt.figure()
-
-plt.subplot(221)
-plt.title("weight_decay")
-plt.plot(train_loss[0.0], color = 'pink', label = '0.0')
-plt.plot(train_loss[0.01], color = 'green', label = "0.01")
-plt.plot(train_loss[0.1], color = 'red', label = "0.1")
-plt.plot(train_loss[0.3], color = 'skyblue', label = "0.3" )
-plt.plot(train_loss[0.5], color = 'blue', label = "0.5" )
-plt.plot(train_loss[0.7], color = 'yellow', label = "0.7" )
-plt.plot(train_loss[0.9], color = 'purple', label = "0.9" )
-plt.legend()
-plt.xlabel('iteration')
-plt.ylabel('train_loss')
-
-plt.subplot(222)
-plt.title("weight_decay")
-plt.plot(train_acc[0.0], color = 'pink', label = '0.0')
-plt.plot(train_acc[0.01], color = 'green', label = "0.01")
-plt.plot(train_acc[0.1], color = 'red', label = "0.1")
-plt.plot(train_acc[0.3], color = 'skyblue', label = "0.3" )
-plt.plot(train_acc[0.5], color = 'blue', label = "0.5" )
-plt.plot(train_acc[0.7], color = 'yellow', label = "0.7" )
-plt.plot(train_acc[0.9], color = 'purple', label = "0.9" )
-plt.legend()
-plt.xlabel('iteration')
-plt.ylabel('train_acc')
-
-plt.subplot(223)
-plt.title("weight_decay")
-plt.plot(test_loss[0.0], color = 'pink', label = '0.0')
-plt.plot(test_loss[0.01], color = 'green', label = "0.01")
-plt.plot(test_loss[0.1], color = 'red', label = "0.1")
-plt.plot(test_loss[0.3], color = 'skyblue', label = "0.3" )
-plt.plot(test_loss[0.5], color = 'blue', label = "0.5" )
-plt.plot(test_loss[0.7], color = 'yellow', label = "0.7" )
-plt.plot(test_loss[0.9], color = 'purple', label = "0.9" )
-plt.legend()
-plt.xlabel('iteration')
-plt.ylabel('test_loss')
-
-plt.subplot(224)
-plt.title("weight_decay")
-plt.plot(test_acc[0.0], color = 'pink', label = '0.0')
-plt.plot(test_acc[0.01], color = 'green', label = "0.01")
-plt.plot(test_acc[0.1], color = 'red', label = "0.1")
-plt.plot(test_acc[0.3], color = 'skyblue', label = "0.3" )
-plt.plot(test_acc[0.5], color = 'blue', label = "0.5" )
-plt.plot(test_acc[0.7], color = 'yellow', label = "0.7" )
-plt.plot(test_acc[0.9], color = 'purple', label = "0.9" )
-plt.legend()
-plt.xlabel('iteration')
-plt.ylabel('test_acc')
-
-plt.show()
+    
